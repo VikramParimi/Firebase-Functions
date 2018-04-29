@@ -36,12 +36,14 @@ exports.resetUserDatabase = functions.https.onCall((data, context) => {
 
 exports.testReset = functions.https.onRequest((req, res) => {
     const userId = req.query.text;
-    const ref = admin.database().ref('/Trip/'+ userId);
+    const ref = admin.database().ref('/Business/'+ userId);
     ref.once('value', function(snap) {
-        snap.forEach(function (childSnap){
-            console.log('user', childSnap.val());
-        }).then(() => {
-            return {text: 'success'}
-        });
+        snap.forEach(function(childSnap) {
+            childSnap.ref.update({
+                'wasDeleted': true
+            });
+        })
+    }).then(snapshot => {
+        res.send('success');
     });
 });
