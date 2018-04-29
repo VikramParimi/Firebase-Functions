@@ -19,4 +19,27 @@ exports.makeUpperCase = functions.database.ref('/users/{pushId}/text').onCreate(
     console.log('Uppercasing', context.params.pushId, original);
     const uppercaseText = original.toUpperCase();
     return snapshot.ref.parent.child('uppercase ').set(uppercaseText);
-});          
+});     
+
+exports.resetUserDatabase = functions.https.onCall((data, context) => {
+    const userId = data.text;
+    const ref = admin.database().ref('/Trip/'+ userId);
+    ref.once('value').then(snap => {
+        snap.forEach(element => {
+            element.ref.child('wasDeleted').set(true);
+        });
+    }).then(() => {
+        return {text: 'success'}
+    })
+});
+
+
+exports.testReset = functions.https.onRequest((req, res) => {
+    const userId = req.query.text;
+    const ref = admin.database().ref('/Trip/'+ userId);
+    ref.once('value', function(snap) {
+        snap.forEach(function (childSnap){
+            console.log('user', childSnap.val());
+        });
+    });
+});
