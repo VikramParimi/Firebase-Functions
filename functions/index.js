@@ -40,6 +40,8 @@ exports.testReset = functions.https.onRequest((req, res) => {
     ref.once('value', function(snap) {
         snap.forEach(function (childSnap){
             console.log('user', childSnap.val());
+        }).then(() => {
+            return {text: 'success'}
         });
     });
 });
