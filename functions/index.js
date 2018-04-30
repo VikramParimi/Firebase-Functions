@@ -26,7 +26,8 @@ var childNodes = ["Business",
 
 exports.resetUserDatabase = functions.https.onCall((data, context) => {
     //Get userId from context
-    const userId = context.userId;
+    const userId = data.text;
+    console.log('userId', userId)
     //Get childNodeIndex from the childNodes Array
     var childNodeIndex = childNodes.length
     recursiveResetFunction(childNodes[childNodeIndex])
@@ -49,10 +50,13 @@ exports.resetUserDatabase = functions.https.onCall((data, context) => {
                 childNodeIndex = childNodeIndex - 1;
                 return recursiveResetFunction(childNodes[childNodeIndex])
             } else {
-                res.send({'success': 200});
+                return {
+                    code: '200',
+                    message: 'success'
+                };
             }
         }).catch(function(err) {
-            return res.send(err);
+             return {text: err.text};
         });
     }
 });
