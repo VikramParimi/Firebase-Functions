@@ -25,9 +25,12 @@ var childNodes = ["Business",
     "Vehicle"]    
 
 exports.resetUserDatabase = functions.https.onCall((data, context) => {
+    //Get userId from context
     const userId = context.userId;
+    //Get childNodeIndex from the childNodes Array
     var childNodeIndex = childNodes.length
     recursiveResetFunction(childNodes[childNodeIndex])
+    //Pass the childNode name to the recursiveReset
     function recursiveResetFunction(childNode) {
         const ref = admin.database().ref(childNode + '/' + userId);
         ref.once('value', function (snap) {
@@ -35,7 +38,6 @@ exports.resetUserDatabase = functions.https.onCall((data, context) => {
                 snap.ref.remove();
             } else {
                 snap.forEach(function (childSnap) {
-                    console.log('childNode', childNode);
                     childSnap.ref.update({
                         'wasDeleted': true
                     });
@@ -43,11 +45,14 @@ exports.resetUserDatabase = functions.https.onCall((data, context) => {
             }
         }).then(snapshot => {
             if (childNodeIndex > 0) {
+                 //Recursion Happens
                 childNodeIndex = childNodeIndex - 1;
                 return recursiveResetFunction(childNodes[childNodeIndex])
             } else {
-                res.send('success');
+                res.send({'success': 200});
             }
+        }).catch(function(err) {
+            return res.send(err);
         });
     }
 });
@@ -63,7 +68,6 @@ exports.testReset = functions.https.onRequest((req, res) => {
                 snap.ref.remove();
             } else {
                 snap.forEach(function (childSnap) {
-                    console.log('childNode', childNode);
                     childSnap.ref.update({
                         'wasDeleted': true
                     });
