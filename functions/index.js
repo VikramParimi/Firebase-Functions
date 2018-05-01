@@ -35,7 +35,8 @@ exports.resetUserDatabase = functions.https.onCall((data, context) => {
     if (!context.auth) {
         throw new functions.https.HttpsError('failed-precondition', 'You must be authenticated to reset the data.');
     }
-    //Pass the childNode name to the recursiveReset
+    return new Promise(function(resolve, reject) {
+        //Pass the childNode name to the recursiveReset
     recursiveResetFunction(childNodes[childNodeIndex])
     function recursiveResetFunction(childNode) {
         const ref = admin.database().ref(childNode + '/' + userId);
@@ -55,15 +56,16 @@ exports.resetUserDatabase = functions.https.onCall((data, context) => {
                 childNodeIndex = childNodeIndex - 1;
                 return recursiveResetFunction(childNodes[childNodeIndex])
             } else {
-                return {
+                return resolve({
                     "code": "200",
                     "message": "success"
-                };
+                });
             }
         }).catch((error) => {
-            throw new functions.https.HttpsError('unknown', error.message, error);
+            return reject(functions.https.HttpsError('unknown', error.message, error));
         });
     }
+    });
 });
 
 exports.testReset = functions.https.onRequest((req, res) => {
