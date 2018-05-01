@@ -29,43 +29,41 @@ exports.resetUserDatabase = functions.https.onCall((data, context) => {
     const userId = data.text;
     console.log('userId', userId)
     //Get childNodeIndex from the childNodes Array
-    var childNodeIndex = childNodes.length
+    var childNodeIndex = childNodes.length - 1
 
     //Checking that the user is authenticated
-    if(!context.auth) {
+    if (!context.auth) {
         throw new functions.https.HttpsError('failed-precondition', 'You must be authenticated to reset the data.');
     }
-    recursiveResetFunction(childNodes[childNodeIndex])
     //Pass the childNode name to the recursiveReset
-    return new Promise(
-        function recursiveResetFunction(childNode) {
-            const ref = admin.database().ref(childNode + '/' + userId);
-            ref.once('value', function (snap) {
-                if (childNode == "CustomField" || childNode == "Settings") {
-                    snap.ref.remove();
-                } else {
-                    snap.forEach(function (childSnap) {
-                        childSnap.ref.update({
-                            'wasDeleted': true
-                        });
-                    })
-                }
-            }).then(snapshot => {
-                //Recursion Happens
-                if (childNodeIndex > 0) {
-                    childNodeIndex = childNodeIndex - 1;
-                    return recursiveResetFunction(childNodes[childNodeIndex])
-                } else {
-                    return {
-                        "code": "200",
-                        "message": "success"
-                    };
-                }
-            }).catch((error) => {
-                throw new functions.https.HttpsError('unknown', error.message, error);
-            });
-        }
-    ) 
+    recursiveResetFunction(childNodes[childNodeIndex])
+    function recursiveResetFunction(childNode) {
+        const ref = admin.database().ref(childNode + '/' + userId);
+        ref.once('value', function (snap) {
+            if (childNode == "CustomField" || childNode == "Settings") {
+                snap.ref.remove();
+            } else {
+                snap.forEach(function (childSnap) {
+                    childSnap.ref.update({
+                        'wasDeleted': true
+                    });
+                })
+            }
+        }).then(snapshot => {
+            //Recursion Happens
+            if (childNodeIndex > 0) {
+                childNodeIndex = childNodeIndex - 1;
+                return recursiveResetFunction(childNodes[childNodeIndex])
+            } else {
+                return {
+                    "code": "200",
+                    "message": "success"
+                };
+            }
+        }).catch((error) => {
+            throw new functions.https.HttpsError('unknown', error.message, error);
+        });
+    }
 });
 
 exports.testReset = functions.https.onRequest((req, res) => {
