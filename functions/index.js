@@ -37,34 +37,34 @@ exports.resetUserDatabase = functions.https.onCall((data, context) => {
     }
     return new Promise(function(resolve, reject) {
         //Pass the childNode name to the recursiveReset
-    recursiveResetFunction(childNodes[childNodeIndex])
-    function recursiveResetFunction(childNode) {
-        const ref = admin.database().ref(childNode + '/' + userId);
-        ref.once('value', function (snap) {
-            if (childNode == "CustomField" || childNode == "Settings") {
-                snap.ref.remove();
-            } else {
-                snap.forEach(function (childSnap) {
-                    childSnap.ref.update({
-                        'wasDeleted': true
+        recursiveResetFunction(childNodes[childNodeIndex])
+        function recursiveResetFunction(childNode) {
+            const ref = admin.database().ref(childNode + '/' + userId);
+            ref.once('value', function (snap) {
+                if (childNode == "CustomField" || childNode == "Settings") {
+                    snap.ref.remove();
+                } else {
+                    snap.forEach(function (childSnap) {
+                        childSnap.ref.update({
+                            'wasDeleted': true
+                        });
+                    })
+                }
+            }).then(snapshot => {
+                //Recursion Happens
+                if (childNodeIndex > 0) {
+                    childNodeIndex = childNodeIndex - 1;
+                    return recursiveResetFunction(childNodes[childNodeIndex])
+                } else {
+                    return resolve({
+                        "code": "200",
+                        "message": "success"
                     });
-                })
-            }
-        }).then(snapshot => {
-            //Recursion Happens
-            if (childNodeIndex > 0) {
-                childNodeIndex = childNodeIndex - 1;
-                return recursiveResetFunction(childNodes[childNodeIndex])
-            } else {
-                return resolve({
-                    "code": "200",
-                    "message": "success"
-                });
-            }
-        }).catch((error) => {
-            return reject(functions.https.HttpsError('unknown', error.message, error));
-        });
-    }
+                }
+            }).catch((error) => {
+                return reject(functions.https.HttpsError('unknown', error.message, error));
+            });
+        }
     });
 });
 
