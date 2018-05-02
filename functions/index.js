@@ -41,7 +41,11 @@ exports.resetUserDatabase = functions.https.onCall((data, context) => {
         function recursiveResetFunction(childNode) {
             const ref = admin.database().ref(childNode + '/' + userId);
             ref.once('value', function (snap) {
-                if (childNode == "CustomField" || childNode == "Settings") {
+                if (childNode == "CustomField"
+                    || childNode == "Settings"
+                    || childNode == "Vehicle"
+                    || childNode == "ExpenseCategory"
+                    || childNode == "CustomField") {
                     snap.ref.remove();
                 } else {
                     snap.forEach(function (childSnap) {
